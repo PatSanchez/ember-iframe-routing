@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <!--Adding shit to the page just to see if it breaks things-->
+        <!--<script src="../libraries/prototype-1.6.1.js"></script>-->
+        <script src="../libraries/mootools-core-1.5.0-full-nocompat.js"></script>
+        
+        <!--Stuff I'm actually using-->
         <script src="../libraries/jschannel.js"></script>
         <script src="../libraries/iframeResizer.min.js"></script>
+        
     </head>
     <body>
         <h1>I am the parent</h1>
-        <iframe id="appFrame" style="width:100%;"></iframe>
+        <iframe id="appFrame" style="width:100%;" scrolling="no" frameborder="0"></iframe>
         <script>
-            iFrameResize({
-                heightCalculationMethod : 'max'
-            });
+            iFrameResize({});
 
             //Sets the hash on the iframe's src property to be the same as the hash on the parent
             function updateIframeUrl(){

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="../libraries/jquery-2.1.1.js"></script>
+        <script src="../libraries/handlebars-v1.3.0.js"></script>
+        <script src="../libraries/ember.js"></script>
+        <script src="../libraries/ember-data.js"></script>
+        <script src="../libraries/jschannel.js"></script>
+        <style>
+            .page {margin: 1em;border:1px solid #c3c3c3;}
+        </style>
+    </head>
+    <body>
+        <script type="text/x-handlebars" data-template-name="index">
+            <div class="page">
+                <div>I am the index route</div>
+                <div>{{#link-to 'foo'}}Go to Foo{{/link-to}}</div>
+            </div>
+            
+        </script>
+        <script type="text/x-handlebars" data-template-name="foo">
+            <div class="page">
+                <div>I am the foo route</div>
+                <div>{{#link-to 'index'}}Go back to index{{/link-to}}</div>
+                <div>{{#link-to 'foo.bar'}}Go to bar{{/link-to}}</div>
+                <div>{{#link-to 'baz'}}Go to baz{{/link-to}}</div>
+                <div>{{outlet}}</div>
+            </div>
+        </script>
+        <script type="text/x-handlebars" data-template-name="foo/bar">
+            <div class="page">
+                <div>I am the bar route</div>
+                <div>{{#link-to 'foo'}}Go back to foo{{/link-to}}</div>    
+            </div>
+        </script>
+        <script type="text/x-handlebars" data-template-name="baz">
+            <div class="page">
+                <div>I am the baz route</div>
+                <div>{{#link-to 'foo'}}Go back to foo{{/link-to}}</div>
+                <div>{{#link-to 'baz.qux'}}Go to qux{{/link-to}}</div>
+                {{outlet}}
+            </div>
+        </script>
+        <script type="text/x-handlebars" data-template-name="baz/qux">
+            <div class="page">
+                <div>I am the qux route</div>
+                <div>{{#link-to 'baz'}}Go back to baz{{/link-to}}</div>
+            </div>
+        </script>
+    </body>
+    <script>
+        //When not in an iframe, don't execute any post message junk
+        var inFrame = window.self !== window.top;
+        if (inFrame){
+            var chan = Channel.build({window: window.parent, origin: "*", scope: "testScope"});
+            
+        }
+        
+        window.App = Ember.Application.create();
+        App.Router.map(function() {
+            this.resource('index', { path: '/' });
+            this.resource('foo', { path: '/foo' }, function(){
+                this.route('bar');
+                this.resource('baz', { path: '/baz' }, function(){
+                    this.route('qux');
+                });
+            });
+        });
+        
+        /*The only part of this whole application that matters
+          Reopen the Router and execute our custom code on didTransition
+         */
+        App.Router.reopen({
+            urlChanged: function() {
+                if(inFrame){
+                    chan.call({
+                        method: "urlChange",
+                        params: this.get('url'),
+                        success: function() {
+                            //noop
+                        }
+                    });
+                }
+            }.on('didTransition')
+        });
+    </script>
+</html>
+        

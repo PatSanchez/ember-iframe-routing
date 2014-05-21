@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="../libraries/jschannel.js"></script>
+    </head>
+    <body>
+        <h1>I am the parent</h1>
+        <iframe id="appFrame" src="app_in_iframe.html" style="width:100%;height:800px;"></iframe>
+        <script>
+            //Sets the hash on the iframe's src property to be the same as the hash on the parent
+            function updateIframeUrl(){
+                
+                /*We may need to do a comparison here to make sure that the source we want to set to isn't the same as
+                  what's already available in the content window of the iframe as this may cause unnecessary js to
+                  execute otherwise. Would need to keep track of the current content in frame via postmessage
+                */
+                
+                /*This would be something we'd need to have printed on the page. Most likely it wouldn't be pretty --
+                  something like o/1234/op/23444
+                */
+                
+                var iframeUrl = 'app_in_iframe.html';
+                
+                var appFrame = document.getElementById('appFrame');
+                var parentHash = window.location.hash;
+                
+                if(parentHash){
+                    iframeUrl += parentHash;
+                }
+                
+                appFrame.src = iframeUrl;
+            }
+            
+            /*On first load, set the iframe's source based on the url of the parent
+              Allows use to automatically send users to the right route in the app based on the parent hash
+             */
+            updateIframeUrl();
+            
+            /*Also trigger on every hashchange of the parent
+              Again, this may be problematic if the iframe content window already has the same url as what we're trying 
+              to set it to. It may cause unnecessary JS to fire but it still seems to work
+             */
+            window.onhashchange = updateIframeUrl;
+                        
+            var chan = Channel.build({
+                window: document.getElementById('appFrame').contentWindow,
+                origin: "*",
+                scope: "testScope"
+            });
+            chan.bind("urlChange", function(trans, s) {
+                //Change the current URL to the one it should be if it's not already that
+                
+                if(window.location.hash.split('#')[1] != s){
+                    
+                    /*Use history.replaceState so that the hashchange on the parent isn't in history and the history
+                      is entirely in the iframe. Cross browser questions here? Do all browsers store iframe history?
+                      Alternative is to make it so within the app we always use replaceWith instead of transitionTo
+                      and then we can have history tracked ONLY on the parent
+                     */
+                    
+                    history.replaceState('', '', '#' + s);
+                }            
+            });
+        </script>
+    </body>
+</html>
+        
